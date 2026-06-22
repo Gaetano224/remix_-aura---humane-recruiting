@@ -1,0 +1,11 @@
+<resources>
+    <color name="mirea_beige">#E5D8CF</color>
+    <color name="mirea_purple">#4A3B6E</color>
+    <color name="mirea_coral">#E8816B</color>
+    <color name="mirea_surface">#F5EDE6</color>
+    <color name="mirea_on_surface">#2C1F3D</color>
+    <color name="mirea_white">#FFFFFF</color>
+    <color name="mirea_green">#7BC67A</color>
+    <color name="mirea_amber">#F5A623</color>
+    <color name="mirea_red">#E05252</color>
+</resources>

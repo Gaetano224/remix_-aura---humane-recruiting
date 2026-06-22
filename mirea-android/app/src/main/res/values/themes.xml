@@ -1,0 +1,8 @@
+<resources>
+    <!-- Base theme (Compose gestisce tutto, questo serve solo per lo splash/finestra) -->
+    <style name="Theme.MireaApp" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/mirea_purple</item>
+        <item name="android:navigationBarColor">@color/mirea_beige</item>
+        <item name="android:windowBackground">@color/mirea_beige</item>
+    </style>
+</resources>

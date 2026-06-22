@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=League+Spartan:wght@100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Fira+Code:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Open Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "League Spartan", sans-serif;
+  --font-mono: "Fira Code", monospace;
+
+  --animate-fade-in: fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-up: slide-up 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-vocal-pulse: vocal-pulse 0.6s ease-in-out infinite alternate;
+
+  @keyframes vocal-pulse {
+    0% {
+      height: 4px;
+    }
+    100% {
+      height: 18px;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Force Open Sans for general structure and boxes/contents, and League Spartan solely for titles/labels */
+html, body, p, span, div, input, textarea, select, button {
+  font-family: "Open Sans", ui-sans-serif, system-ui, sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6, label, .font-display {
+  font-family: "League Spartan", sans-serif !important;
+}
+
+code, pre, .font-mono {
+  font-family: "Fira Code", monospace !important;
+}
+
+html {
+  font-size: 15px;
+}
+
+/* Global typography scaling for clean, high-density web and mobile app appearance */
+.text-\[2px\] { font-size: 2px !important; }
+.text-\[2\.5px\] { font-size: 2.5px !important; }
+.text-\[3px\] { font-size: 3px !important; }
+.text-\[3\.5px\] { font-size: 3.5px !important; }
+.text-\[4px\] { font-size: 4px !important; }
+.text-\[4\.5px\] { font-size: 4.5px !important; }
+.text-\[5px\] { font-size: 5px !important; }
+.text-\[5\.5px\] { font-size: 5.5px !important; }
+.text-\[6px\] { font-size: 6px !important; }
+.text-\[6\.5px\] { font-size: 6.5px !important; }
+.text-\[7px\] { font-size: 7px !important; }
+.text-\[7\.5px\] { font-size: 7.5px !important; }
+.text-\[8px\] { font-size: 8px !important; }
+.text-\[8\.5px\] { font-size: 8.5px !important; }
+.text-\[9px\] { font-size: 9px !important; }
+.text-\[9\.5px\] { font-size: 9.5px !important; }
+.text-\[10px\] { font-size: 10px !important; }
+.text-\[10\.5px\] { font-size: 10.5px !important; }
+.text-\[11px\] { font-size: 11px !important; }
+.text-\[12px\] { font-size: 12px !important; }
+.text-\[12\.5px\] { font-size: 12.5px !important; }
+.text-xs { font-size: 11px !important; }
+.text-sm { font-size: 13.5px !important; }
+.text-base { font-size: 15px !important; }
+.text-lg { font-size: 17px !important; }
+
+/* Subtly scale down texts inside container boxes, inputs, checklists, and forms */
+div[class*="bg-white"] p, 
+div[class*="bg-white"] span:not(.font-display):not(.uppercase),
+div[class*="bg-white"] input,
+div[class*="bg-white"] textarea,
+div[class*="bg-white"] select,
+div[class*="bg-slate-50"] p,
+div[class*="bg-slate-50"] span:not(.font-display):not(.uppercase),
+div[class*="bg-slate-50"] input,
+div[class*="bg-slate-50"] textarea,
+div[class*="bg-slate-100"] p,
+div[class*="bg-slate-100"] span:not(.font-display):not(.uppercase),
+div[class*="bg-slate-950"] p,
+div[class*="bg-slate-950"] span:not(.font-display):not(.uppercase),
+div[class*="bg-slate-900"] p,
+div[class*="bg-slate-900"] span:not(.font-display):not(.uppercase),
+div[class*="bg-emerald-50"] p,
+div[class*="bg-red-50"] p,
+.border-slate-200 p,
+.border-slate-200 span:not(.font-display):not(.uppercase),
+.border-slate-300 p,
+.border-slate-300 span:not(.font-display):not(.uppercase),
+textarea, 
+input, 
+select {
+  font-size: 0.92em !important;
+}
+
+

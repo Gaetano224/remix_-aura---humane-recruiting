@@ -1,0 +1,14 @@
+# Android Studio / IntelliJ / Gradle ignore rules
+.gradle
+/local.properties
+*.iml
+.idea
+/build
+/app/build
+/captures
+.externalNativeBuild
+.cxx
+*.apk
+*.aar
+*.keystore
+*.jks

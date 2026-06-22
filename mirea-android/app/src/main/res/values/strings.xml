@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Mirea</string>
+    <string name="app_tagline">Il recruiting che ti rispetta</string>
+    <string name="tab_riasec">Test</string>
+    <string name="tab_cv">CV</string>
+    <string name="tab_jobs">Offerte</string>
+    <string name="tab_chat">Mirea AI</string>
+    <string name="tab_diary">Diario</string>
+    <string name="btn_next">Avanti</string>
+    <string name="btn_back">Indietro</string>
+    <string name="btn_send">Invia</string>
+    <string name="btn_upload_cv">Carica CV (PDF)</string>
+    <string name="btn_analyze">Analizza</string>
+    <string name="loading">Analisi in corso…</string>
+    <string name="error_no_api_key">Nessuna API Key configurata. Verrà usata la modalità demo.</string>
+    <string name="chat_hint">Scrivi un messaggio…</string>
+    <string name="diary_hint_title">Titolo della nota…</string>
+    <string name="diary_hint_content">Come ti senti oggi?</string>
+</resources>
