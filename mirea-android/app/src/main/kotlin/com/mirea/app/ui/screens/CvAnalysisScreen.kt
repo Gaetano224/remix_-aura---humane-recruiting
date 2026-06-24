@@ -185,7 +185,7 @@ fun CvAnalysisScreen(
                 ) {
                     Icon(Icons.Default.AutoAwesome, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
-                    Text("Analizza con Gemini AI", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    Text("Analizza CV", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             }
 

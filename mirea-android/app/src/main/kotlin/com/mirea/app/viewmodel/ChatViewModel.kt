@@ -3,7 +3,7 @@ package com.mirea.app.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mirea.app.data.models.ChatMessage
-import com.mirea.app.data.repository.GeminiRepository
+import com.mirea.app.data.repository.MireaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-class ChatViewModel(private val geminiRepo: GeminiRepository) : ViewModel() {
+class ChatViewModel(private val mireaRepo: MireaRepository = MireaRepository()) : ViewModel() {
 
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages.asStateFlow()
@@ -51,7 +51,7 @@ class ChatViewModel(private val geminiRepo: GeminiRepository) : ViewModel() {
                     sender = "user", text = welcomePrompt,
                     timestamp = now(), mode = _mode.value
                 )
-                val response = geminiRepo.sendChatMessage(
+                val response = mireaRepo.sendChatMessage(
                     listOf(tempMsg), _mode.value, _jobTitle.value, _company.value, _skills.value
                 )
                 addAssistantMessage(response)
@@ -75,7 +75,7 @@ class ChatViewModel(private val geminiRepo: GeminiRepository) : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val response = geminiRepo.sendChatMessage(
+                val response = mireaRepo.sendChatMessage(
                     _messages.value, _mode.value, _jobTitle.value, _company.value, _skills.value
                 )
                 addAssistantMessage(response)

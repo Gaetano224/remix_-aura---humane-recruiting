@@ -109,7 +109,7 @@ fun SplashScreen(onFinished: () -> Unit) {
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 40.dp)
         ) {
             Text(
-                text = "powered by Gemini AI ✨",
+                text = "Humane Recruiting ✨",
                 fontSize = 12.sp,
                 color = MireaWhite.copy(alpha = 0.5f)
             )

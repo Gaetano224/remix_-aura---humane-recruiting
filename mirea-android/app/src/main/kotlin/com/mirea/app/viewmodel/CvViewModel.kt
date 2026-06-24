@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mirea.app.data.models.CVParseResult
 import com.mirea.app.data.models.RiasecResult
-import com.mirea.app.data.repository.GeminiRepository
+import com.mirea.app.data.repository.MireaRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,7 @@ sealed class CvUiState {
     data class Error(val message: String) : CvUiState()
 }
 
-class CvViewModel(private val geminiRepo: GeminiRepository) : ViewModel() {
+class CvViewModel(private val mireaRepo: MireaRepository = MireaRepository()) : ViewModel() {
 
     private val _uiState = MutableStateFlow<CvUiState>(CvUiState.Idle)
     val uiState: StateFlow<CvUiState> = _uiState.asStateFlow()
@@ -57,7 +57,7 @@ class CvViewModel(private val geminiRepo: GeminiRepository) : ViewModel() {
             _uiState.value = CvUiState.Loading
             try {
                 val answers = riasecResult?.answers ?: List(14) { 65 }
-                val result = geminiRepo.parseCV(_cvText.value, answers)
+                val result = mireaRepo.parseCV(_cvText.value, answers)
                 _uiState.value = CvUiState.Success(result)
             } catch (e: Exception) {
                 _uiState.value = CvUiState.Error("Errore di analisi: ${e.localizedMessage}")

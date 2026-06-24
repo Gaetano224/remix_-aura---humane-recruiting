@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.*
 import androidx.compose.runtime.*
-import com.mirea.app.data.repository.GeminiRepository
 import com.mirea.app.ui.navigation.MireaNavGraph
 import com.mirea.app.ui.screens.SplashScreen
 import com.mirea.app.ui.theme.MireaTheme
@@ -15,9 +14,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        val apiKey = BuildConfig.GEMINI_API_KEY
-        val geminiRepository = GeminiRepository(apiKey)
 
         setContent {
             MireaTheme {
@@ -33,7 +29,7 @@ class MainActivity : ComponentActivity() {
                     if (isSplash) {
                         SplashScreen(onFinished = { showSplash = false })
                     } else {
-                        MireaNavGraph(geminiRepository = geminiRepository)
+                        MireaNavGraph()
                     }
                 }
             }

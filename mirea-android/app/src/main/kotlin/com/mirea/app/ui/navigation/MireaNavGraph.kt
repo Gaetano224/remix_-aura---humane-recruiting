@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -18,7 +19,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.mirea.app.data.models.JobPosting
 import com.mirea.app.data.models.RiasecResult
-import com.mirea.app.data.repository.GeminiRepository
 import com.mirea.app.ui.screens.*
 import com.mirea.app.ui.theme.*
 import com.mirea.app.viewmodel.*
@@ -28,50 +28,26 @@ sealed class Screen(val route: String, val label: String,
     object Test    : Screen("test",  "Test",    Icons.Outlined.Psychology,  Icons.Filled.Psychology)
     object CV      : Screen("cv",    "CV",      Icons.Outlined.Description, Icons.Filled.Description)
     object Jobs    : Screen("jobs",  "Offerte", Icons.Outlined.Work,        Icons.Filled.Work)
-    object Chat    : Screen("chat",  "Mirea AI",Icons.Outlined.Chat,        Icons.Filled.Chat)
+    object Chat    : Screen("chat",  "Mirea",   Icons.Outlined.Chat,        Icons.Filled.Chat)
     object Diary   : Screen("diary", "Diario",  Icons.Outlined.Book,        Icons.Filled.Book)
 }
 
 private val BOTTOM_NAV_ITEMS = listOf(Screen.Test, Screen.CV, Screen.Jobs, Screen.Chat, Screen.Diary)
 
 @Composable
-fun MireaNavGraph(geminiRepository: GeminiRepository) {
+fun MireaNavGraph() {
     val navController = rememberNavController()
 
     // Stato condiviso tra schermate
     var riasecResult by remember { mutableStateOf<RiasecResult?>(null) }
     var pendingInterviewJob by remember { mutableStateOf<JobPosting?>(null) }
 
-    // ViewModels
+    // ViewModels — nessuna factory custom necessaria
     val riasecViewModel: RiasecViewModel = viewModel()
-    val cvViewModel: CvViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return CvViewModel(geminiRepository) as T
-        }
-    })
-    val chatViewModel: ChatViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-            @Suppress("UNCHECKED_CAST")
-            return ChatViewModel(geminiRepository) as T
-        }
-    })
+    val cvViewModel: CvViewModel = viewModel()
+    val chatViewModel: ChatViewModel = viewModel()
     val jobViewModel: JobViewModel = viewModel()
-    val diaryViewModel: DiaryViewModel = viewModel(
-        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                val app = androidx.compose.ui.platform.LocalContext
-                @Suppress("UNCHECKED_CAST")
-                return DiaryViewModel(
-                    com.mirea.app.data.repository.DiaryRepository(
-                        com.mirea.app.data.local.MireaDatabase.getInstance(
-                            androidx.compose.ui.platform.LocalContext.current
-                        ).diaryNoteDao()
-                    )
-                ) as T
-            }
-        }
-    )
+    val diaryViewModel: DiaryViewModel = viewModel()
 
     Scaffold(
         containerColor = MireaBeige,

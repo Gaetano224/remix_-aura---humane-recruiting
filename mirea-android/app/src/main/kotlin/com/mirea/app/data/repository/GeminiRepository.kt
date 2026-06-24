@@ -1,147 +1,24 @@
 package com.mirea.app.data.repository
 
-import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
-import com.google.ai.client.generativeai.type.generationConfig
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.mirea.app.data.models.CVParseResult
 import com.mirea.app.data.models.ChatMessage
 import com.mirea.app.data.models.Skill
+import kotlinx.coroutines.delay
 
-class GeminiRepository(private val apiKey: String) {
-
-    private val gson = Gson()
-    private val hasValidKey get() = apiKey.isNotBlank() && apiKey != "INSERISCI_QUI_LA_TUA_GEMINI_API_KEY"
-
-    // ── Crea un model con parametri specifici ──────────────────────────────
-    private fun buildModel(
-        systemInstruction: String,
-        temperature: Float = 0.7f,
-        jsonMode: Boolean = false
-    ): GenerativeModel {
-        return GenerativeModel(
-            modelName = "gemini-1.5-flash",
-            apiKey = apiKey,
-            generationConfig = generationConfig {
-                this.temperature = temperature
-                if (jsonMode) responseMimeType = "application/json"
-            },
-            systemInstruction = content { text(systemInstruction) }
-        )
-    }
+/**
+ * Repository locale che fornisce risposte predefinite per l'analisi CV e la chat.
+ * Nessuna dipendenza da servizi esterni o API.
+ */
+class MireaRepository {
 
     // ── Analisi CV ─────────────────────────────────────────────────────────
     suspend fun parseCV(cvText: String, answers: List<Int>): CVParseResult {
-        if (!hasValidKey) return getMockParseResult(cvText, answers)
-
-        val systemInstruction = """Sei un esperto di orientamento di carriera e psicometria RIASEC.
-Analizza il curriculum e i punteggi del test psicometrico per consigliare figure professionali reali.
-Rispondi SOLO con JSON valido senza markdown."""
-
-        val prompt = """Analizza questo curriculum combinato con il test RIASEC.
-CV:
-\"\"\"
-$cvText
-\"\"\"
-
-Punteggi RIASEC (14 risposte, valori 0-100): ${answers.joinToString(",")}
-Ordine: Realistico×2, Investigativo×2, Artistico×2, Sociale×2, Intraprendente×2, Convenzionale×2, Mobilità, Stress
-
-Restituisci JSON con questa struttura:
-{
-  "candidateName": "string",
-  "email": "string",
-  "summary": "string",
-  "professionalTitle": "string",
-  "matchedTitles": ["string"],
-  "profileMatchingFeedback": "string in italiano",
-  "skills": [{"name":"string","category":"hard|soft|creative","description":"string","rating":0-100}],
-  "careerPathSuggestions": ["string"]
-}"""
-
-        return try {
-            val model = buildModel(systemInstruction, temperature = 0.3f, jsonMode = true)
-            val response = model.generateContent(prompt)
-            val text = response.text ?: return getMockParseResult(cvText, answers)
-            parseCVResponse(text)
-        } catch (e: Exception) {
-            getMockParseResult(cvText, answers)
-        }
+        // Simula un piccolo tempo di elaborazione per UX naturale
+        delay(1500)
+        return getParseResult(cvText, answers)
     }
 
-    private fun parseCVResponse(json: String): CVParseResult {
-        return try {
-            val obj = gson.fromJson(json, JsonObject::class.java)
-            CVParseResult(
-                candidateName = obj.get("candidateName")?.asString ?: "",
-                email = obj.get("email")?.asString ?: "",
-                summary = obj.get("summary")?.asString ?: "",
-                professionalTitle = obj.get("professionalTitle")?.asString ?: "",
-                matchedTitles = obj.getAsJsonArray("matchedTitles")?.map { it.asString } ?: emptyList(),
-                profileMatchingFeedback = obj.get("profileMatchingFeedback")?.asString ?: "",
-                skills = obj.getAsJsonArray("skills")?.map { el ->
-                    val s = el.asJsonObject
-                    Skill(
-                        name = s.get("name")?.asString ?: "",
-                        category = s.get("category")?.asString ?: "hard",
-                        description = s.get("description")?.asString ?: "",
-                        rating = s.get("rating")?.asInt ?: 50
-                    )
-                } ?: emptyList(),
-                careerPathSuggestions = obj.getAsJsonArray("careerPathSuggestions")
-                    ?.map { it.asString } ?: emptyList()
-            )
-        } catch (e: Exception) {
-            CVParseResult()
-        }
-    }
-
-    // ── Chat Mirea ─────────────────────────────────────────────────────────
-    suspend fun sendChatMessage(
-        messages: List<ChatMessage>,
-        mode: String,
-        jobTitle: String = "",
-        company: String = "",
-        skills: List<String> = emptyList()
-    ): String {
-        if (!hasValidKey) return getMockChatResponse(mode, jobTitle, company)
-
-        val systemInstruction = when (mode) {
-            "interview" -> """Sei Mirea, l'intervistatrice virtuale empatica.
-Stai conducendo una simulazione di colloquio per la posizione di "$jobTitle" presso "$company".
-Valuta le risposte in base a queste competenze: ${skills.joinToString(", ")}.
-Fai UNA domanda alla volta. Tono caldo, professionale e incoraggiante."""
-
-            "empathy" -> """Sei Mirea, il coach empatico della piattaforma.
-Il candidato ha ricevuto un rifiuto per "$jobTitle".
-Umanizza questo momento: sii sensibile, caldo, empatico.
-Aiuta a sollevare il morale, spiega che un rifiuto non definisce il suo valore.
-Dai suggerimenti costruttivi."""
-
-            else -> """Sei Mirea, l'assistente virtuale della piattaforma di recruiting umano.
-Supporta candidati e recruiter. Sii amichevole, calorosa e incoraggiante."""
-        }
-
-        return try {
-            val model = buildModel(systemInstruction, temperature = 0.75f)
-            // Ricostruisce la storia della chat
-            val history = messages.dropLast(1).map { msg ->
-                content(role = if (msg.sender == "user") "user" else "model") {
-                    text(msg.text)
-                }
-            }
-            val chat = model.startChat(history = history)
-            val lastMessage = messages.last().text
-            val response = chat.sendMessage(lastMessage)
-            response.text ?: "Mi dispiace, non ho capito. Puoi ripetere?"
-        } catch (e: Exception) {
-            getMockChatResponse(mode, jobTitle, company)
-        }
-    }
-
-    // ── Mock fallback (senza API key) ──────────────────────────────────────
-    private fun getMockParseResult(cvText: String, answers: List<Int>): CVParseResult {
+    private fun getParseResult(cvText: String, answers: List<Int>): CVParseResult {
         val lower = cvText.lowercase()
         val hasTech = lower.contains("react") || lower.contains("typescript") ||
                 lower.contains("python") || lower.contains("developer") ||
@@ -214,19 +91,126 @@ Supporta candidati e recruiter. Sii amichevole, calorosa e incoraggiante."""
         }
     }
 
-    private fun getMockChatResponse(mode: String, jobTitle: String, company: String): String {
+    // ── Chat Mirea ─────────────────────────────────────────────────────────
+    suspend fun sendChatMessage(
+        messages: List<ChatMessage>,
+        mode: String,
+        jobTitle: String = "",
+        company: String = "",
+        skills: List<String> = emptyList()
+    ): String {
+        // Simula un piccolo tempo di risposta per UX naturale
+        delay(800)
+        return getChatResponse(messages, mode, jobTitle, company)
+    }
+
+    private fun getChatResponse(
+        messages: List<ChatMessage>,
+        mode: String,
+        jobTitle: String,
+        company: String
+    ): String {
+        val userMessageCount = messages.count { it.sender == "user" }
+        val lastUserMessage = messages.lastOrNull { it.sender == "user" }?.text?.lowercase() ?: ""
+
         return when (mode) {
-            "interview" -> "Ciao! Sono Mirea 🤖 (modalità demo). " +
-                    "Per la posizione di \"$jobTitle\" presso \"$company\" ti chiedo: " +
-                    "Puoi raccontarmi una situazione in cui hai risolto un problema complesso " +
-                    "con risorse limitate? Come hai gestito la pressione del team?"
-            "empathy" -> "Ciao... ho saputo del rifiuto per \"$jobTitle\" 💙 " +
-                    "So che fa male, ma questo momento non definisce il tuo valore. " +
-                    "Ogni porta chiusa ti avvicina a quella giusta. Vuoi che lavoriamo insieme " +
-                    "sui punti di forza da valorizzare nella prossima candidatura?"
-            else -> "Ciao! Sono Mirea 🌸, la tua alleata per un recruiting più umano. " +
-                    "Posso aiutarti a simulare un colloquio, darti supporto emotivo " +
-                    "o analizzare le tue competenze. Come posso aiutarti oggi?"
+            "interview" -> getInterviewResponse(userMessageCount, lastUserMessage, jobTitle, company)
+            "empathy" -> getEmpathyResponse(userMessageCount, lastUserMessage, jobTitle)
+            else -> getGeneralResponse(userMessageCount, lastUserMessage)
+        }
+    }
+
+    private fun getInterviewResponse(turn: Int, userMessage: String, jobTitle: String, company: String): String {
+        return when (turn) {
+            0 -> "Ciao! Sono Mirea 🌸, la tua intervistatrice virtuale. " +
+                    "Oggi simuleremo un colloquio per la posizione di \"$jobTitle\" presso \"$company\". " +
+                    "Rilassati e rispondi come faresti in un vero colloquio.\n\n" +
+                    "Iniziamo: **Puoi presentarti brevemente e raccontarmi cosa ti ha spinto a candidarti per questo ruolo?**"
+            1 -> "Grazie per la tua presentazione! È molto interessante il tuo percorso. 😊\n\n" +
+                    "Ora vorrei approfondire: **Puoi raccontarmi una situazione lavorativa in cui hai dovuto affrontare " +
+                    "un problema complesso? Come l'hai risolto?**"
+            2 -> "Ottimo esempio! La capacità di problem solving è fondamentale. 💪\n\n" +
+                    "Passiamo a un'altra area: **Come gestisci il lavoro sotto pressione e le scadenze strette? " +
+                    "Hai un metodo particolare di organizzazione?**"
+            3 -> "Apprezzo molto la tua organizzazione! 📋\n\n" +
+                    "Un'ultima domanda: **Dove ti vedi professionalmente tra 3-5 anni? " +
+                    "Quali competenze vorresti sviluppare?**"
+            else -> "Grazie mille per questa simulazione! 🎉\n\n" +
+                    "**Feedback complessivo:** Hai dimostrato buone capacità comunicative e una chiara visione professionale. " +
+                    "Ti consiglio di preparare sempre degli esempi concreti dalle tue esperienze passate e di " +
+                    "quantificare i risultati ottenuti quando possibile.\n\n" +
+                    "Punti di forza emersi:\n" +
+                    "• Buona capacità di auto-presentazione\n" +
+                    "• Approccio strutturato ai problemi\n" +
+                    "• Chiarezza negli obiettivi\n\n" +
+                    "In bocca al lupo per il tuo prossimo colloquio! 🍀"
+        }
+    }
+
+    private fun getEmpathyResponse(turn: Int, userMessage: String, jobTitle: String): String {
+        return when (turn) {
+            0 -> "Ciao... ho saputo del rifiuto per \"$jobTitle\" 💙\n\n" +
+                    "So che può essere un momento difficile, ma voglio che tu sappia una cosa importante: " +
+                    "**un rifiuto non definisce il tuo valore professionale.** Ogni percorso di carriera " +
+                    "ha i suoi alti e bassi, e spesso le porte che si chiudono ci guidano verso " +
+                    "opportunità ancora migliori.\n\n" +
+                    "Come ti senti in questo momento?"
+            1 -> "È completamente normale sentirsi così, e ti ringrazio per la sincerità. 🌿\n\n" +
+                    "Spesso i rifiuti dipendono da fattori che non hanno nulla a che fare con le tue capacità: " +
+                    "budget interni, tempistiche, candidati interni già in lista... " +
+                    "Non è quasi mai una questione di \"non essere abbastanza\".\n\n" +
+                    "**Vuoi che lavoriamo insieme sui tuoi punti di forza da valorizzare nella prossima candidatura?**"
+            2 -> "Assolutamente! Ecco alcuni suggerimenti concreti: 📝\n\n" +
+                    "1. **Rivedi il tuo CV** con occhi freschi, evidenziando i risultati misurabili\n" +
+                    "2. **Prepara una \"storia\" per ogni competenza chiave** con il metodo STAR\n" +
+                    "3. **Fai networking attivo** — il 70% delle assunzioni avviene tramite contatti\n" +
+                    "4. **Dedica tempo alla cura di te stesso** — corpo e mente riposati performano meglio\n\n" +
+                    "Ricorda: ogni colloquio, anche quelli andati male, ti rendono più preparato per il prossimo. 💪"
+            else -> "Sono qui per te in ogni momento del tuo percorso! 🌸\n\n" +
+                    "Ti lascio con un pensiero: le persone di maggior successo non sono quelle che non hanno " +
+                    "mai ricevuto un rifiuto, ma quelle che hanno saputo rialzarsi ogni volta.\n\n" +
+                    "Quando ti sentirai pronto, possiamo fare una simulazione di colloquio insieme per " +
+                    "prepararti al meglio. Non sei solo in questo percorso! 🍀"
+        }
+    }
+
+    private fun getGeneralResponse(turn: Int, userMessage: String): String {
+        return when {
+            turn == 0 -> "Ciao! Sono Mirea 🌸, la tua alleata per un recruiting più umano.\n\n" +
+                    "Ecco cosa posso fare per te:\n" +
+                    "• **Simulazione colloquio** — Preparati con domande realistiche\n" +
+                    "• **Supporto emotivo** — Gestire lo stress della ricerca lavoro\n" +
+                    "• **Analisi competenze** — Scopri i tuoi punti di forza\n\n" +
+                    "Come posso aiutarti oggi?"
+            userMessage.contains("colloquio") || userMessage.contains("intervista") ->
+                "Ottima scelta! La simulazione di colloquio è uno degli strumenti più efficaci per prepararsi. 🎯\n\n" +
+                        "Per iniziare, vai nella sezione **Offerte di lavoro** e seleziona una posizione " +
+                        "che ti interessa. Da lì potrai avviare una simulazione personalizzata!\n\n" +
+                        "Alcuni consigli generali:\n" +
+                        "• Prepara sempre 2-3 domande da fare al recruiter\n" +
+                        "• Studia l'azienda e i suoi valori\n" +
+                        "• Pratica il metodo STAR per le risposte comportamentali"
+            userMessage.contains("cv") || userMessage.contains("curriculum") ->
+                "Il CV è il tuo biglietto da visita! 📄\n\n" +
+                        "Vai nella sezione **CV** per caricare e analizzare il tuo curriculum. " +
+                        "Il sistema analizzerà le tue competenze e ti suggerirà i ruoli più adatti.\n\n" +
+                        "Ricorda: un buon CV è conciso (max 2 pagine), quantifica i risultati " +
+                        "e usa parole chiave del settore!"
+            userMessage.contains("stress") || userMessage.contains("ansia") || userMessage.contains("paura") ->
+                "È completamente normale sentirsi stressati durante la ricerca di lavoro. 💙\n\n" +
+                        "Ecco alcune strategie che possono aiutarti:\n" +
+                        "1. **Stabilisci una routine** — Dedica orari fissi alla ricerca\n" +
+                        "2. **Celebra i piccoli traguardi** — Ogni candidatura inviata è un passo avanti\n" +
+                        "3. **Usa il Diario** — Scrivi i tuoi pensieri nella sezione Diario dell'app\n" +
+                        "4. **Prenditi delle pause** — Il burnout da ricerca lavoro è reale\n\n" +
+                        "Sei più forte di quanto pensi! 💪"
+            else -> "Grazie per il tuo messaggio! 😊\n\n" +
+                    "Posso aiutarti con diverse cose:\n" +
+                    "• **Test RIASEC** — Scopri il tuo profilo psicometrico\n" +
+                    "• **Analisi CV** — Fai analizzare le tue competenze\n" +
+                    "• **Offerte di lavoro** — Esplora le posizioni disponibili\n" +
+                    "• **Diario** — Tieni traccia del tuo percorso\n\n" +
+                    "Cosa ti interessa approfondire?"
         }
     }
 }
